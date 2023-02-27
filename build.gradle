@@ -1,0 +1,52 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '2.7.9'
+	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+group = 'pl.kolo'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.14'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'com.h2database:h2'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+compileJava {
+	options.compilerArgs << '-parameters'
+}
+
+task generatePostsAndComments() {
+	doLast {
+		File dataSql = file("src/main/resources/data.sql")
+		dataSql.write("")
+		for (int i = 1; i <= 100; i++) {
+			dataSql.append("insert into post(title, content, created) " +
+					"values ('Test post ${i}', 'Content ${i}', '"+ LocalDateTime.now().minusDays(100 - i) +"');\n")
+		}
+		for (int i = 1; i <= 100; i++) {
+			int postId = 1 + i / 10
+			dataSql.append("insert into comment( post_id, content, created) " +
+					"values ( ${postId}, 'Comment ${i}', '"+ LocalDateTime.now().minusDays(100 - i) +"');\n")
+		}
+	}
+}
